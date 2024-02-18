@@ -24,7 +24,7 @@
   #include "device.h"
   #include "mem.h"
   #include "queue.h"
-  #include "stream.h"
+  #include "stream_helios.h"
   #include "sys.h"
   #include "task.h"
 
