@@ -14,7 +14,7 @@
  * 
  */
 /*UNCRUSTIFY-ON*/
-#include "stream.h"
+#include "stream_helios.h"
 
 
 Return_t xStreamCreate(StreamBuffer_t **stream_) {
