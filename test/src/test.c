@@ -16,6 +16,11 @@
 /*UNCRUSTIFY-ON*/
 #include "test.h"
 
+/* External cleanup function declarations for filesystem components */
+extern void __FSStateClear__(void);
+extern void __BlockDeviceStateClear__(void);
+extern void __RAMDiskStateClear__(void);
+
 
 int main(int argc, char **argv) {
   unit_init();
@@ -33,6 +38,8 @@ int main(int argc, char **argv) {
   stream_harness();
   reset();
   device_harness();
+  reset();
+  fs_harness();
   unit_exit();
 
   return(0);
@@ -44,6 +51,9 @@ void reset(void) {
   __SysStateClear__();
   __TaskStateClear__();
   __DeviceStateClear__();
+  __FSStateClear__();
+  __BlockDeviceStateClear__();
+  __RAMDiskStateClear__();
 
   return;
 }

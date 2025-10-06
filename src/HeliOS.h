@@ -422,6 +422,155 @@
 
 
   /**
+   * @brief Data structure for FAT32 volume metadata
+   *
+   * @sa xVolume
+   * @sa xFSMount()
+   * @sa xFSUnmount()
+   *
+   */
+  typedef struct Volume_s {
+    xHalfWord blockDeviceUID;
+    xWord fatStartSector;
+    xWord dataStartSector;
+    xWord rootDirCluster;
+    xByte sectorsPerCluster;
+    xHalfWord bytesPerSector;
+    xHalfWord reservedSectors;
+    xByte numFATs;
+    xWord sectorsPerFAT;
+    xBase mounted;
+  } Volume_t;
+
+
+  /**
+   * @brief Data type for a FAT32 volume
+   *
+   * @sa Volume_t
+   * @sa xFSMount()
+   * @sa xFSUnmount()
+   *
+   */
+  typedef Volume_t *xVolume;
+
+
+  /**
+   * @brief Data structure for file handle
+   *
+   * @sa xFile
+   * @sa xFileOpen()
+   * @sa xFileClose()
+   *
+   */
+  typedef struct File_s {
+    struct Volume_s *volume;
+    xWord firstCluster;
+    xWord currentCluster;
+    xWord fileSize;
+    xWord position;
+    xByte mode;
+    xBase isOpen;
+    xBase isDirty;
+  } File_t;
+
+
+  /**
+   * @brief Data type for a file handle
+   *
+   * @sa File_t
+   * @sa xFileOpen()
+   * @sa xFileClose()
+   *
+   */
+  typedef File_t *xFile;
+
+
+  /**
+   * @brief Data structure for directory handle
+   *
+   * @sa xDir
+   * @sa xDirOpen()
+   * @sa xDirClose()
+   *
+   */
+  typedef struct Dir_s {
+    struct Volume_s *volume;
+    xWord currentCluster;
+    xHalfWord entryIndex;
+    xBase isOpen;
+  } Dir_t;
+
+
+  /**
+   * @brief Data type for a directory handle
+   *
+   * @sa Dir_t
+   * @sa xDirOpen()
+   * @sa xDirClose()
+   *
+   */
+  typedef Dir_t *xDir;
+
+
+  /**
+   * @brief Data structure for directory entry information
+   *
+   * @sa xDirEntry
+   * @sa xDirRead()
+   * @sa xFileGetInfo()
+   *
+   */
+  typedef struct DirEntry_s {
+    xByte name[256];
+    xWord size;
+    xWord firstCluster;
+    xBase isDirectory;
+    xBase isReadOnly;
+    xBase isHidden;
+    xBase isSystem;
+  } DirEntry_t;
+
+
+  /**
+   * @brief Data type for a directory entry
+   *
+   * @sa DirEntry_t
+   * @sa xDirRead()
+   * @sa xFileGetInfo()
+   *
+   */
+  typedef DirEntry_t *xDirEntry;
+
+
+  /**
+   * @brief Data structure for volume information
+   *
+   * @sa xVolumeInfo
+   * @sa xFSGetVolumeInfo()
+   *
+   */
+  typedef struct VolumeInfo_s {
+    xWord totalClusters;
+    xWord freeClusters;
+    xWord totalBytes;
+    xWord freeBytes;
+    xHalfWord bytesPerSector;
+    xByte sectorsPerCluster;
+    xWord bytesPerCluster;
+  } VolumeInfo_t;
+
+
+  /**
+   * @brief Data type for volume information
+   *
+   * @sa VolumeInfo_t
+   * @sa xFSGetVolumeInfo()
+   *
+   */
+  typedef VolumeInfo_t *xVolumeInfo;
+
+
+  /**
    * @brief Data structure for a direct to task notification
    *
    * The TaskNotification_t data structure is used by xTaskNotifyGive() and
@@ -2975,6 +3124,33 @@
    *                if(ERROR(xMemGetUsed(&size))) {}).
    */
   xReturn xTimerStop(xTimer timer_);
+
+
+  /* Filesystem syscalls */
+  xReturn xFSMount(xVolume *volume_, const xHalfWord blockDeviceUID_);
+  xReturn xFSUnmount(xVolume volume_);
+  xReturn xFSGetVolumeInfo(const xVolume volume_, xVolumeInfo *info_);
+  xReturn xFSFormat(const xHalfWord blockDeviceUID_, const xByte *volumeLabel_);
+  xReturn xFileOpen(xFile *file_, xVolume volume_, const xByte *path_, const xByte mode_);
+  xReturn xFileClose(xFile file_);
+  xReturn xFileRead(xFile file_, const xSize size_, xByte **data_);
+  xReturn xFileWrite(xFile file_, const xSize size_, const xByte *data_);
+  xReturn xFileSeek(xFile file_, const xWord offset_, const xByte origin_);
+  xReturn xFileTell(const xFile file_, xWord *position_);
+  xReturn xFileGetSize(const xFile file_, xWord *size_);
+  xReturn xFileSync(xFile file_);
+  xReturn xFileTruncate(xFile file_, const xWord size_);
+  xReturn xFileEOF(const xFile file_, xBase *eof_);
+  xReturn xDirOpen(xDir *dir_, xVolume volume_, const xByte *path_);
+  xReturn xDirClose(xDir dir_);
+  xReturn xDirRead(xDir dir_, xDirEntry *entry_);
+  xReturn xDirRewind(xDir dir_);
+  xReturn xDirMake(xVolume volume_, const xByte *path_);
+  xReturn xDirRemove(xVolume volume_, const xByte *path_);
+  xReturn xFileExists(xVolume volume_, const xByte *path_, xBase *exists_);
+  xReturn xFileUnlink(xVolume volume_, const xByte *path_);
+  xReturn xFileRename(xVolume volume_, const xByte *oldPath_, const xByte *newPath_);
+  xReturn xFileGetInfo(xVolume volume_, const xByte *path_, xDirEntry *entry_);
 
   #ifdef __cplusplus
     }

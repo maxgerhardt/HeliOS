@@ -15,6 +15,8 @@
                 "-Wno-unused-parameter",
                 "-Wno-pointer-to-int-cast",
                 "-I${workspaceFolder}/src",
+                "-I${workspaceFolder}/drivers/ramdisk",
+                "-I${workspaceFolder}/drivers/block",
                 "-I${workspaceFolder}/test/src",
                 "-I${workspaceFolder}/test/src/harness",
                 "-I${workspaceFolder}/test/src/unit",
@@ -24,6 +26,8 @@
                 "-DUNIT_TEST_COLORIZE",
                 "-o${workspaceFolder}/test/bin/test",
                 "${workspaceFolder}/src/*.c",
+                "${workspaceFolder}/drivers/ramdisk/*.c",
+                "${workspaceFolder}/drivers/block/*.c",
                 "${workspaceFolder}/test/src/*.c",
                 "${workspaceFolder}/test/src/harness/*.c",
                 "${workspaceFolder}/test/src/unit/*.c"

@@ -25,6 +25,7 @@
   #include "timer_harness.h"
   #include "stream_harness.h"
   #include "device_harness.h"
+  #include "fs_harness.h"
 
   #ifdef __cplusplus
     extern "C" {
