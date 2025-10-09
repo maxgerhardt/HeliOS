@@ -284,6 +284,48 @@ Return_t xDeviceWrite(const HalfWord_t uid_, Size_t *size_, Addr_t *data_) {
 }
 
 
+/**
+ * @brief Internal kernel-level device write (no heap memory checks/copies)
+ * @param uid_ Device UID
+ * @param size_ Pointer to size of data in kernel memory
+ * @param data_ Pointer to data in kernel memory
+ * @return ReturnOK on success, ReturnError on failure
+ */
+Return_t __DeviceWrite__(const HalfWord_t uid_, Size_t *size_, Addr_t *data_) {
+  FUNCTION_ENTER;
+
+  Device_t *device = null;
+
+  if(__DeviceUidNonZero__() && __PointerIsNotNull__(size_) && (nil < *size_) && __PointerIsNotNull__(data_) && __PointerIsNotNull__(dlist)) {
+    /* Look-up the device by its unique identifier */
+    if(OK(__DeviceListFind__(uid_, &device))) {
+      if(__PointerIsNotNull__(device)) {
+        /* Check device is running and writable */
+        if(((DeviceModeReadWrite == device->mode) || (DeviceModeWriteOnly == device->mode)) && (DeviceStateRunning == device->state)) {
+          /* Call driver write directly with kernel memory (no copy needed) */
+          if(OK((*device->write)(device, size_, data_))) {
+            device->bytesWritten += *size_;
+            __ReturnOk__();
+          } else {
+            __AssertOnElse__();
+          }
+        } else {
+          __AssertOnElse__();
+        }
+      } else {
+        __AssertOnElse__();
+      }
+    } else {
+      __AssertOnElse__();
+    }
+  } else {
+    __AssertOnElse__();
+  }
+
+  FUNCTION_EXIT;
+}
+
+
 Return_t xDeviceSimpleRead(const HalfWord_t uid_, Byte_t *data_) {
   FUNCTION_ENTER;
 
@@ -392,6 +434,58 @@ Return_t xDeviceRead(const HalfWord_t uid_, Size_t *size_, Addr_t **data_) {
                    * to free the kernel memory. */
                   __KernelFreeMemory__(data);
                 }
+              } else {
+                __AssertOnElse__();
+              }
+            } else {
+              __AssertOnElse__();
+            }
+          } else {
+            __AssertOnElse__();
+          }
+        } else {
+          __AssertOnElse__();
+        }
+      } else {
+        __AssertOnElse__();
+      }
+    } else {
+      __AssertOnElse__();
+    }
+  } else {
+    __AssertOnElse__();
+  }
+
+  FUNCTION_EXIT;
+}
+
+
+/**
+ * @brief Internal kernel-level device read (no heap memory allocation/copies)
+ * @param uid_ Device UID
+ * @param size_ Pointer to receive size of data read
+ * @param data_ Pointer to receive kernel memory buffer (caller must free)
+ * @return ReturnOK on success, ReturnError on failure
+ */
+Return_t __DeviceRead__(const HalfWord_t uid_, Size_t *size_, Addr_t **data_) {
+  FUNCTION_ENTER;
+
+  Device_t *device = null;
+
+  if(__DeviceUidNonZero__() && __PointerIsNotNull__(size_) && __PointerIsNotNull__(data_) && __PointerIsNotNull__(dlist)) {
+    /* Look-up the device by its unique identifier */
+    if(OK(__DeviceListFind__(uid_, &device))) {
+      if(__PointerIsNotNull__(device)) {
+        /* Check device is running and readable */
+        if(((DeviceModeReadWrite == device->mode) || (DeviceModeReadOnly == device->mode)) && (DeviceStateRunning == device->state)) {
+          /* Call driver read directly - returns kernel memory */
+          if(OK((*device->read)(device, size_, data_))) {
+            if((nil < *size_) && __PointerIsNotNull__(*data_)) {
+              /* Verify data is in kernel memory */
+              if(OK(__MemoryRegionCheckKernel__(*data_, MEMORY_REGION_CHECK_OPTION_W_ADDR))) {
+                device->bytesRead += *size_;
+                /* Note: Caller must free the kernel memory returned by driver */
+                __ReturnOk__();
               } else {
                 __AssertOnElse__();
               }
@@ -555,6 +649,43 @@ Return_t xDeviceConfigDevice(const HalfWord_t uid_, Size_t *size_, Addr_t *confi
           } else {
             __AssertOnElse__();
           }
+        } else {
+          __AssertOnElse__();
+        }
+      } else {
+        __AssertOnElse__();
+      }
+    } else {
+      __AssertOnElse__();
+    }
+  } else {
+    __AssertOnElse__();
+  }
+
+  FUNCTION_EXIT;
+}
+
+
+/**
+ * @brief Internal kernel-level device config (no heap memory checks/copies)
+ * @param uid_ Device UID
+ * @param size_ Pointer to size of config data in kernel memory
+ * @param config_ Pointer to config data in kernel memory (bidirectional)
+ * @return ReturnOK on success, ReturnError on failure
+ */
+Return_t __DeviceConfigDevice__(const HalfWord_t uid_, Size_t *size_, Addr_t *config_) {
+  FUNCTION_ENTER;
+
+  Device_t *device = null;
+
+  if(__DeviceUidNonZero__() && (nil < *size_) && __PointerIsNotNull__(config_) && __PointerIsNotNull__(dlist)) {
+    /* Look-up the device by its unique identifier */
+    if(OK(__DeviceListFind__(uid_, &device))) {
+      if(__PointerIsNotNull__(device)) {
+        /* Call driver config directly with kernel memory (no copy needed) */
+        /* Note: config is bidirectional - driver may modify it */
+        if(OK((*device->config)(device, size_, config_))) {
+          __ReturnOk__();
         } else {
           __AssertOnElse__();
         }

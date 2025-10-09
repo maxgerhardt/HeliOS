@@ -88,6 +88,7 @@
     Byte_t protocol;                  /* BLOCK_PROTOCOL_* constant */
     HalfWord_t blockSize;             /* Block/sector size (typically 512) */
     Word_t totalBlocks;               /* Total capacity in blocks (0 = auto-detect) */
+    Byte_t _padding[3];               /* Padding to distinguish from BlockDeviceCommand_t */
   } BlockDeviceConfig_t;
 
   /**

@@ -69,6 +69,11 @@
   Return_t xDeviceInitDevice(const HalfWord_t uid_);
   Return_t xDeviceConfigDevice(const HalfWord_t uid_, Size_t *size_, Addr_t *config_);
 
+  /* Internal kernel-level device APIs (for driver-to-driver communication) */
+  Return_t __DeviceWrite__(const HalfWord_t uid_, Size_t *size_, Addr_t *data_);
+  Return_t __DeviceRead__(const HalfWord_t uid_, Size_t *size_, Addr_t **data_);
+  Return_t __DeviceConfigDevice__(const HalfWord_t uid_, Size_t *size_, Addr_t *config_);
+
   #if defined(POSIX_ARCH_OTHER)
     void __DeviceStateClear__(void);
   #endif /* if defined(POSIX_ARCH_OTHER) */
