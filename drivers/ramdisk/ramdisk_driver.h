@@ -29,18 +29,19 @@
   #include "task.h"
   #include "timer.h"
 
+
   /* Device name must be exactly CONFIG_DEVICE_NAME_BYTES (8 bytes) */
   #define DEVICE_NAME RAMDISK0
   #define DEVICE_UID 0x0100u
   #define DEVICE_MODE DeviceModeReadWrite
   #define DEVICE_STATE DeviceStateRunning
 
+
   /* RAM disk size - 1MB for testing */
   #if defined(RAMDISK_SIZE_BYTES)
     #undef RAMDISK_SIZE_BYTES
   #endif /* if defined(RAMDISK_SIZE_BYTES) */
   #define RAMDISK_SIZE_BYTES 0x100000u /* 1048576 (1MB) */
-
   /* Configuration commands - used with xDeviceConfigDevice() */
   #if defined(RAMDISK_CMD_SET_POSITION)
     #undef RAMDISK_CMD_SET_POSITION
@@ -57,6 +58,7 @@
   #endif /* if defined(RAMDISK_CMD_GET_STATS) */
   #define RAMDISK_CMD_GET_STATS 0x03u /* 3 */
 
+
   /**
    * @brief RAM disk position configuration
    *
@@ -64,8 +66,9 @@
    */
   typedef struct RAMDiskPositionConfig_s {
     Byte_t command;            /* RAMDISK_CMD_SET_POSITION */
-    Word_t position;           /* Byte offset to set */
+    Word_t position; /* Byte offset to set */
   } RAMDiskPositionConfig_t;
+
 
   /**
    * @brief RAM disk clear configuration
@@ -74,29 +77,29 @@
    */
   typedef struct RAMDiskClearConfig_s {
     Byte_t command;            /* RAMDISK_CMD_CLEAR_DISK */
-    Byte_t fillPattern;        /* Pattern to fill with */
+    Byte_t fillPattern; /* Pattern to fill with */
   } RAMDiskClearConfig_t;
+
 
   /**
    * @brief RAM disk statistics structure
    *
-   * Used with xDeviceConfigDevice() to get statistics.
-   * Call with command = RAMDISK_CMD_GET_STATS, then read back.
+   * Used with xDeviceConfigDevice() to get statistics. Call with command =
+   * RAMDISK_CMD_GET_STATS, then read back.
    */
   typedef struct RAMDiskStats_s {
     Byte_t command;            /* RAMDISK_CMD_GET_STATS */
-    Word_t totalSize;          /* Total size in bytes */
-    Word_t currentPosition;    /* Current read/write position */
-    Word_t bytesRead;          /* Total bytes read since init */
-    Word_t bytesWritten;       /* Total bytes written since init */
-    Word_t readOperations;     /* Number of read operations */
-    Word_t writeOperations;    /* Number of write operations */
+    Word_t totalSize; /* Total size in bytes */
+    Word_t currentPosition; /* Current read/write position */
+    Word_t bytesRead; /* Total bytes read since init */
+    Word_t bytesWritten; /* Total bytes written since init */
+    Word_t readOperations; /* Number of read operations */
+    Word_t writeOperations; /* Number of write operations */
   } RAMDiskStats_t;
 
   #ifdef __cplusplus
     extern "C" {
   #endif /* ifdef __cplusplus */
-
   /* Driver interface functions - DO NOT CALL DIRECTLY */
   /* Use xDevice* syscalls instead */
   Return_t RAMDISK0_self_register(void);

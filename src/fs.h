@@ -29,6 +29,7 @@
   #include "task.h"
   #include "timer.h"
 
+
   /* File open modes */
   #if defined(FS_MODE_READ)
     #undef FS_MODE_READ
@@ -49,7 +50,6 @@
     #undef FS_MODE_CREATE
   #endif /* if defined(FS_MODE_CREATE) */
   #define FS_MODE_CREATE 0x08u /* 8 */
-
   /* File seek origins */
   #if defined(FS_SEEK_SET)
     #undef FS_SEEK_SET
@@ -65,7 +65,6 @@
     #undef FS_SEEK_END
   #endif /* if defined(FS_SEEK_END) */
   #define FS_SEEK_END 0x02u /* 2 */
-
   /* Maximum path length - configurable */
   #if !defined(CONFIG_FS_MAX_PATH_LENGTH)
     #define CONFIG_FS_MAX_PATH_LENGTH 256u /* 256 */
@@ -74,12 +73,12 @@
   #ifdef __cplusplus
     extern "C" {
   #endif /* ifdef __cplusplus */
-
   /* Volume Management */
   Return_t xFSMount(Volume_t **volume_, const HalfWord_t blockDeviceUID_);
   Return_t xFSUnmount(Volume_t *volume_);
   Return_t xFSGetVolumeInfo(const Volume_t *volume_, VolumeInfo_t **info_);
   Return_t xFSFormat(const HalfWord_t blockDeviceUID_, const Byte_t *volumeLabel_);
+
 
   /* File Operations */
   Return_t xFileOpen(File_t **file_, Volume_t *volume_, const Byte_t *path_, const Byte_t mode_);
@@ -93,6 +92,7 @@
   Return_t xFileTruncate(File_t *file_, const Word_t size_);
   Return_t xFileEOF(const File_t *file_, Base_t *eof_);
 
+
   /* Directory Operations */
   Return_t xDirOpen(Dir_t **dir_, Volume_t *volume_, const Byte_t *path_);
   Return_t xDirClose(Dir_t *dir_);
@@ -100,6 +100,7 @@
   Return_t xDirRewind(Dir_t *dir_);
   Return_t xDirMake(Volume_t *volume_, const Byte_t *path_);
   Return_t xDirRemove(Volume_t *volume_, const Byte_t *path_);
+
 
   /* File/Directory Management */
   Return_t xFileExists(Volume_t *volume_, const Byte_t *path_, Base_t *exists_);

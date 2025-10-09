@@ -20,25 +20,24 @@
 /* Driver state - NO hardware-specific fields */
 typedef struct BlockDeviceState_s {
   HalfWord_t ioDriverUID;           /* I/O driver to use for communication */
-  Byte_t protocol;                   /* Storage protocol (SD/MMC/RAW) */
-  HalfWord_t blockSize;              /* Bytes per block */
-  Word_t totalBlocks;                /* Device capacity */
-  Base_t initialized;                /* Initialization flag */
-  Word_t currentBlockNumber;         /* Last addressed block */
-  HalfWord_t currentBlockCount;      /* Blocks in current operation */
+  Byte_t protocol; /* Storage protocol (SD/MMC/RAW) */
+  HalfWord_t blockSize; /* Bytes per block */
+  Word_t totalBlocks; /* Device capacity */
+  Base_t initialized; /* Initialization flag */
+  Word_t currentBlockNumber; /* Last addressed block */
+  HalfWord_t currentBlockCount; /* Blocks in current operation */
 } BlockDeviceState_t;
 
 
-static BlockDeviceState_t state = {0};
+
+static BlockDeviceState_t state = {
+  0
+};
 
 
 /* Forward declarations */
-static Return_t __BlockDeviceReadBlockRAW__(const Word_t blockNum_,
-                                           const HalfWord_t blockCount_,
-                                           Byte_t **data_);
-static Return_t __BlockDeviceWriteBlockRAW__(const Word_t blockNum_,
-                                            const HalfWord_t blockCount_,
-                                            const Byte_t *data_);
+static Return_t __BlockDeviceReadBlockRAW__(const Word_t blockNum_, const HalfWord_t blockCount_, Byte_t **data_);
+static Return_t __BlockDeviceWriteBlockRAW__(const Word_t blockNum_, const HalfWord_t blockCount_, const Byte_t *data_);
 
 
 /*UNCRUSTIFY-OFF*/

@@ -18,21 +18,28 @@
 
 
 /* RAM disk storage - 1MB static array */
-static Byte_t ramdisk[RAMDISK_SIZE_BYTES] = {0};
+static Byte_t ramdisk[RAMDISK_SIZE_BYTES] = {
+  0
+};
+
 
 
 /* Driver state - tracks position and statistics */
 typedef struct RAMDiskState_s {
   Word_t currentPosition;      /* Current read/write position */
-  Word_t bytesRead;            /* Total bytes read */
-  Word_t bytesWritten;         /* Total bytes written */
-  Word_t readOperations;       /* Number of read ops */
-  Word_t writeOperations;      /* Number of write ops */
-  Base_t initialized;          /* Initialization flag */
+  Word_t bytesRead; /* Total bytes read */
+  Word_t bytesWritten; /* Total bytes written */
+  Word_t readOperations; /* Number of read ops */
+  Word_t writeOperations; /* Number of write ops */
+  Base_t initialized; /* Initialization flag */
 } RAMDiskState_t;
 
 
-static RAMDiskState_t state = {0};
+
+static RAMDiskState_t state = {
+  0
+};
+
 
 
 /*UNCRUSTIFY-OFF*/

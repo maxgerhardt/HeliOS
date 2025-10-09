@@ -19,8 +19,6 @@
 
 
   #include "../unit/unit.h"
-
-
   void fs_harness(void);
 
 
