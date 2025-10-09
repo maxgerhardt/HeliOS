@@ -39,7 +39,7 @@ static SchedulerState_t scheduler = SchedulerStateRunning;
           if(task_->totalRunTime < prev) { \
             __SetFlag__(OVERFLOW); \
           }
-#elif  /* if defined(CONFIG_TASK_WD_TIMER_ENABLE) */
+#else  /* if defined(CONFIG_TASK_WD_TIMER_ENABLE) */
   #define __TaskRun__(task_) \
           prev = task_->totalRunTime; \
           start = __PortGetSysTicks__(); \
