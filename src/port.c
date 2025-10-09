@@ -3,7 +3,7 @@
  * @file port.c
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Kernel source for portability layer
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -18,13 +18,13 @@
 
 
 #if defined(CMSIS_ARCH_CORTEXM)
-  static volatile Ticks_t sysTicks = zero;
+  static volatile Ticks_t sysTicks = nil;
 
 
   void SysTick_Handler(void) {
-    DISABLE_INTERRUPTS();
+    __DisableInterrupts__();
     sysTicks++;
-    ENABLE_INTERRUPTS();
+    __EnableInterrupts__();
 
     return;
   }
@@ -71,26 +71,26 @@ Ticks_t __PortGetSysTicks__(void) {
 
 
 Return_t __PortInit__(void) {
-  RET_DEFINE;
+  FUNCTION_ENTER;
 
 #if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAM) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_STM32) || \
   defined(ARDUINO_TEENSY_MICROMOD) || defined(ARDUINO_TEENSY40) || defined(ARDUINO_TEENSY41) || defined(ARDUINO_TEENSY36) || defined(ARDUINO_TEENSY35) || \
   defined(ARDUINO_TEENSY31) || defined(ARDUINO_TEENSY32) || defined(ARDUINO_TEENSY30) || defined(ARDUINO_TEENSYLC)
 
-    RET_OK;
+    __ReturnOk__();
 
 #elif defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
 
-    RET_OK;
+    __ReturnOk__();
 
 #elif defined(CMSIS_ARCH_CORTEXM)
 
     SysTick_Config(SYSTEM_CORE_CLOCK_FREQUENCY / SYSTEM_CORE_CLOCK_PRESCALER);
-    RET_OK;
+    __ReturnOk__();
 
 #elif defined(POSIX_ARCH_OTHER)
 
-    RET_OK;
+    __ReturnOk__();
 
 #endif /* if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAM) ||
         * defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_ESP8266) ||
@@ -99,5 +99,5 @@ Return_t __PortInit__(void) {
         * defined(ARDUINO_TEENSY36) || defined(ARDUINO_TEENSY35) ||
         * defined(ARDUINO_TEENSY31) || defined(ARDUINO_TEENSY32) ||
         * defined(ARDUINO_TEENSY30) || defined(ARDUINO_TEENSYLC) */
-  RET_RETURN;
+  FUNCTION_EXIT;
 }

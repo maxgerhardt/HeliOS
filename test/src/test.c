@@ -3,7 +3,7 @@
  * @file test.c
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Unit testing sources
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -15,6 +15,11 @@
  */
 /*UNCRUSTIFY-ON*/
 #include "test.h"
+
+/* External cleanup function declarations for filesystem components */
+extern void __FSStateClear__(void);
+extern void __BlockDeviceStateClear__(void);
+extern void __RAMDiskStateClear__(void);
 
 
 int main(int argc, char **argv) {
@@ -33,6 +38,14 @@ int main(int argc, char **argv) {
   stream_harness();
   reset();
   device_harness();
+  printf("=== DEVICE HARNESS COMPLETED ===\n");
+  fflush(stdout);
+  reset();
+  printf("=== RESET COMPLETED, STARTING FS HARNESS ===\n");
+  fflush(stdout);
+  fs_harness();
+  printf("=== FS HARNESS COMPLETED ===\n");
+  fflush(stdout);
   unit_exit();
 
   return(0);
@@ -44,6 +57,9 @@ void reset(void) {
   __SysStateClear__();
   __TaskStateClear__();
   __DeviceStateClear__();
+  __FSStateClear__();
+  __BlockDeviceStateClear__();
+  __RAMDiskStateClear__();
 
   return;
 }

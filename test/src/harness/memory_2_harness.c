@@ -3,7 +3,7 @@
  * @file memory_2_harness.c
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Unit testing sources
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -49,7 +49,7 @@ void memory_2_harness(void) {
 void test_magic(void) {
   volatile Addr_t *ptr = null;
   MemoryEntry_t *entry = null;
-  Size_t size = zero;
+  Size_t size = nil;
 
 
   /* 1) Create something in the heap*/
@@ -62,7 +62,7 @@ void test_magic(void) {
 
 
   /* 3) Check the memfault flag (should be "false" at this point) */
-  unit_try(FLAGNOTSET(MEMFAULT));
+  unit_try(__FlagIsNotSet__(MEMFAULT));
 
 
   /* 4) Modify some part of the memory entry */
@@ -76,7 +76,7 @@ void test_magic(void) {
 
 
   /* 6) Check the memfault flag (should be "true" at this point) */
-  unit_try(FLAGSET(MEMFAULT));
+  unit_try(__FlagIsSet__(MEMFAULT));
 
 
   /* 7) Call __MemoryClear__() and __SysStateClear__() */
@@ -90,7 +90,7 @@ void test_magic(void) {
 void test_free(void) {
   volatile Addr_t *ptr = null;
   MemoryEntry_t *entry = null;
-  Size_t size = zero;
+  Size_t size = nil;
 
 
   /* 1) Create something in the heap*/
@@ -103,7 +103,7 @@ void test_free(void) {
 
 
   /* 3) Check the memfault flag (should be "false" at this point) */
-  unit_try(FLAGNOTSET(MEMFAULT));
+  unit_try(__FlagIsNotSet__(MEMFAULT));
 
 
   /* 4) Modify some part of the memory entry */
@@ -116,7 +116,7 @@ void test_free(void) {
 
 
   /* 6) Check the memfault flag (should be "true" at this point) */
-  unit_try(FLAGSET(MEMFAULT));
+  unit_try(__FlagIsSet__(MEMFAULT));
 
 
   /* 7) Call __MemoryClear__() and __SysStateClear__() */
@@ -130,7 +130,7 @@ void test_free(void) {
 void test_blocks(void) {
   volatile Addr_t *ptr = null;
   MemoryEntry_t *entry = null;
-  Size_t size = zero;
+  Size_t size = nil;
 
 
   /* 1) Create something in the heap*/
@@ -143,7 +143,7 @@ void test_blocks(void) {
 
 
   /* 3) Check the memfault flag (should be "false" at this point) */
-  unit_try(FLAGNOTSET(MEMFAULT));
+  unit_try(__FlagIsNotSet__(MEMFAULT));
 
 
   /* 4) Modify some part of the memory entry */
@@ -156,7 +156,7 @@ void test_blocks(void) {
 
 
   /* 6) Check the memfault flag (should be "true" at this point) */
-  unit_try(FLAGSET(MEMFAULT));
+  unit_try(__FlagIsSet__(MEMFAULT));
 
 
   /* 7) Call __MemoryClear__() and __SysStateClear__() */
@@ -170,7 +170,7 @@ void test_blocks(void) {
 void test_next(void) {
   volatile Addr_t *ptr = null;
   MemoryEntry_t *entry = null;
-  Size_t size = zero;
+  Size_t size = nil;
 
 
   /* 1) Create something in the heap*/
@@ -183,7 +183,7 @@ void test_next(void) {
 
 
   /* 3) Check the memfault flag (should be "false" at this point) */
-  unit_try(FLAGNOTSET(MEMFAULT));
+  unit_try(__FlagIsNotSet__(MEMFAULT));
 
 
   /* 4) Modify some part of the memory entry */
@@ -197,7 +197,7 @@ void test_next(void) {
 
 
   /* 6) Check the memfault flag (should be "true" at this point) */
-  unit_try(FLAGSET(MEMFAULT));
+  unit_try(__FlagIsSet__(MEMFAULT));
 
 
   /* 7) Call __MemoryClear__() and __SysStateClear__() */

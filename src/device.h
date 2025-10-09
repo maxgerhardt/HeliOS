@@ -3,7 +3,7 @@
  * @file device.h
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Kernel source for device I/O
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -28,6 +28,31 @@
   #include "task.h"
   #include "timer.h"
 
+
+  #if defined(CONCAT)
+    #undef CONCAT
+  #endif /* if defined(CONCAT) */
+  #define CONCAT(a_, b_) a_ ## b_
+
+
+  #if defined(QUOTE)
+    #undef QUOTE
+  #endif /* if defined(QUOTE) */
+  #define QUOTE(a_) #a_
+
+
+  #if defined(TO_FUNCTION)
+    #undef TO_FUNCTION
+  #endif /* if defined(TO_FUNCTION) */
+  #define TO_FUNCTION(a_, b_) CONCAT(a_, b_)
+
+
+  #if defined(TO_LITERAL)
+    #undef TO_LITERAL
+  #endif /* if defined(TO_LITERAL) */
+  #define TO_LITERAL(a_) QUOTE(a_)
+
+
   #ifdef __cplusplus
     extern "C" {
   #endif /* ifdef __cplusplus */
@@ -43,6 +68,11 @@
   Return_t xDeviceRead(const HalfWord_t uid_, Size_t *size_, Addr_t **data_);
   Return_t xDeviceInitDevice(const HalfWord_t uid_);
   Return_t xDeviceConfigDevice(const HalfWord_t uid_, Size_t *size_, Addr_t *config_);
+
+  /* Internal kernel-level device APIs (for driver-to-driver communication) */
+  Return_t __DeviceWrite__(const HalfWord_t uid_, Size_t *size_, Addr_t *data_);
+  Return_t __DeviceRead__(const HalfWord_t uid_, Size_t *size_, Addr_t **data_);
+  Return_t __DeviceConfigDevice__(const HalfWord_t uid_, Size_t *size_, Addr_t *config_);
 
   #if defined(POSIX_ARCH_OTHER)
     void __DeviceStateClear__(void);

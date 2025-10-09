@@ -3,7 +3,7 @@
  * @file memory_2_harness.h
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Unit testing sources
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -34,7 +34,7 @@
   #if defined(ENTRYSIZE)
     #undef ENTRYSIZE
   #endif /* if defined(ENTRYSIZE) */
-  #define ENTRYSIZE ((sizeof(MemoryEntry_t) / CONFIG_MEMORY_REGION_BLOCK_SIZE) + (zero < (sizeof(MemoryEntry_t) % CONFIG_MEMORY_REGION_BLOCK_SIZE) ? 1 : 0))
+  #define ENTRYSIZE ((sizeof(MemoryEntry_t) / CONFIG_MEMORY_REGION_BLOCK_SIZE) + (nil < (sizeof(MemoryEntry_t) % CONFIG_MEMORY_REGION_BLOCK_SIZE) ? 1 : 0))
 
   #if defined(ADDR2ENTRY)
     #undef ADDR2ENTRY

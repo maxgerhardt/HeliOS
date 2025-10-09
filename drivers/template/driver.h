@@ -3,7 +3,7 @@
  * @file driver.h
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief A template for kernel mode device drivers
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -36,7 +36,7 @@
  * CONFIG_DEVICE_NAME_BYTES (DEFAULT IS 8) IN LENGTH, IT MAY BE NECESSARY TO PAD
  * SHORTER DEVICE NAMES. */
   #define DEVICE_NAME DEVICENA
-  #define DEVICE_UID 0x00u
+  #define DEVICE_UID 0x0u
   #define DEVICE_MODE DeviceModeReadWrite
   #define DEVICE_STATE DeviceStateRunning
 

@@ -3,7 +3,7 @@
  * @file defines.h
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Kernel source for macro definitions
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -55,172 +55,10 @@
   #endif /* if defined(__cplusplus) */
 
 
-  #if defined(zero)
-    #undef zero
-  #endif /* if defined(zero) */
-  #define zero 0x0u /* 0 */
-
-
-  #if defined(OS_PRODUCT_NAME_SIZE)
-    #undef OS_PRODUCT_NAME_SIZE
-  #endif /* if defined(OS_PRODUCT_NAME_SIZE) */
-  #define OS_PRODUCT_NAME_SIZE 0x6u /* 6 */
-
-
-  #if defined(OS_PRODUCT_NAME)
-    #undef OS_PRODUCT_NAME
-  #endif /* if defined(OS_PRODUCT_NAME) */
-  #define OS_PRODUCT_NAME "HeliOS"
-
-
-  #if defined(OS_MAJOR_VERSION_NO)
-    #undef OS_MAJOR_VERSION_NO
-  #endif /* if defined(OS_MAJOR_VERSION_NO) */
-  #define OS_MAJOR_VERSION_NO 0x0u /* 0 */
-
-
-  #if defined(OS_MINOR_VERSION_NO)
-    #undef OS_MINOR_VERSION_NO
-  #endif /* if defined(OS_MINOR_VERSION_NO) */
-  #define OS_MINOR_VERSION_NO 0x4u /* 4 */
-
-
-  #if defined(OS_PATCH_VERSION_NO)
-    #undef OS_PATCH_VERSION_NO
-  #endif /* if defined(OS_PATCH_VERSION_NO) */
-  #define OS_PATCH_VERSION_NO 0x2u /* 2 */
-
-
-  #if defined(MEMORY_REGION_SIZE_IN_BYTES)
-    #undef MEMORY_REGION_SIZE_IN_BYTES
-  #endif /* if defined(MEMORY_REGION_SIZE_IN_BYTES) */
-  #define MEMORY_REGION_SIZE_IN_BYTES CONFIG_MEMORY_REGION_SIZE_IN_BLOCKS *CONFIG_MEMORY_REGION_BLOCK_SIZE
-
-
-  #if defined(RUNNING)
-    #undef RUNNING
-  #endif /* if defined(RUNNING) */
-  #define RUNNING flag.running
-
-
-  #if defined(OVERFLOW)
-    #undef OVERFLOW
-  #endif /* if defined(OVERFLOW) */
-  #define OVERFLOW flag.overflow
-
-
-  #if defined(MEMFAULT)
-    #undef MEMFAULT
-  #endif /* if defined(MEMFAULT) */
-  #define MEMFAULT flag.memfault
-
-
-  #if defined(LITTLEEND)
-    #undef LITTLEEND
-  #endif /* if defined(LITTLEEND) */
-  #define LITTLEEND flag.littleend
-
-
-  #if defined(SETFLAG)
-    #undef SETFLAG
-  #endif /* if defined(SETFLAG) */
-  #define SETFLAG(flag_) (flag_ = 0xFFu)
-
-
-  #if defined(UNSETFLAG)
-    #undef UNSETFLAG
-  #endif /* if defined(UNSETFLAG) */
-  #define UNSETFLAG(flag_) (flag_ = 0x00u)
-
-
-  #if defined(FLAGSET)
-    #undef FLAGSET
-  #endif /* if defined(FLAGSET) */
-  #define FLAGSET(flag_) (0xFFu == flag_)
-
-
-  #if defined(FLAGNOTSET)
-    #undef FLAGNOTSET
-  #endif /* if defined(FLAGNOTSET) */
-  #define FLAGNOTSET(flag_) (0x00u == flag_)
-
-
-  #if defined(NOTNULLPTR)
-    #undef NOTNULLPTR
-  #endif /* if defined(NOTNULLPTR) */
-  #define NOTNULLPTR(addr_) ((null) != (addr_))
-
-
-  #if defined(NULLPTR)
-    #undef NULLPTR
-  #endif /* if defined(NULLPTR) */
-  #define NULLPTR(addr_) ((null) == (addr_))
-
-
-  #if defined(RET_DEFINE)
-    #undef RET_DEFINE
-  #endif /* if defined(RET_DEFINE) */
-  #define RET_DEFINE Return_t ret = ReturnError
-
-
-  #if defined(RET_RETURN)
-    #undef RET_RETURN
-  #endif /* if defined(RET_RETURN) */
-  #define RET_RETURN return(ret)
-
-
-  #if defined(RET_OK)
-    #undef RET_OK
-  #endif /* if defined(RET_OK) */
-  #define RET_OK ret = ReturnOK
-
-
-  #if defined(OK)
-    #undef OK
-  #endif /* if defined(OK) */
-  #define OK(expr_) ((ReturnOK) == (expr_))
-
-
-  #if defined(ERROR)
-    #undef ERROR
-  #endif /* if defined(ERROR) */
-  #define ERROR(expr_) ((ReturnError) == (expr_))
-
-
-  #if defined(ASSERT)
-    #undef ASSERT
-  #endif /* if defined(ASSERT) */
-  #if defined(CONFIG_ENABLE_SYSTEM_ASSERT)
-    #define ASSERT xSystemAssert(__FILE__, __LINE__)
-  #else  /* if defined(CONFIG_ENABLE_SYSTEM_ASSERT) */
-    #define ASSERT
-  #endif /* if defined(CONFIG_ENABLE_SYSTEM_ASSERT) */
-
-
-  #if defined(MEMORY_REGION_CHECK_OPTION_WO_ADDR)
-    #undef MEMORY_REGION_CHECK_OPTION_WO_ADDR
-  #endif /* if defined(MEMORY_REGION_CHECK_OPTION_WO_ADDR) */
-  #define MEMORY_REGION_CHECK_OPTION_WO_ADDR 0x1u /* 1 */
-
-
-  #if defined(MEMORY_REGION_CHECK_OPTION_W_ADDR)
-    #undef MEMORY_REGION_CHECK_OPTION_W_ADDR
-  #endif /* if defined(MEMORY_REGION_CHECK_OPTION_W_ADDR) */
-  #define MEMORY_REGION_CHECK_OPTION_W_ADDR 0x2u /* 2 */
-
-
-  #if defined(ADDR2ENTRY)
-    #undef ADDR2ENTRY
-  #endif /* if defined(ADDR2ENTRY) */
-  #define ADDR2ENTRY(addr_, region_) ((MemoryEntry_t *) (((Byte_t *) (addr_)) - ((region_)->entrySize * \
-          CONFIG_MEMORY_REGION_BLOCK_SIZE)))
-
-
-  #if defined(ENTRY2ADDR)
-    #undef ENTRY2ADDR
-  #endif /* if defined(ENTRY2ADDR) */
-  #define ENTRY2ADDR(addr_, region_) ((Addr_t *) (((Byte_t *) (addr_)) + ((region_)->entrySize * \
-          CONFIG_MEMORY_REGION_BLOCK_SIZE)))
+  #if defined(nil)
+    #undef nil
+  #endif /* if defined(nil) */
+  #define nil 0x0u /* 0 */
 
 
   #if defined(UINT8_TYPE)
@@ -253,71 +91,68 @@
   #define VOID_TYPE void
 
 
-  #if defined(DEREF_TASKPARM)
-    #undef DEREF_TASKPARM
-  #endif /* if defined(DEREF_TASKPARM) */
-  #define DEREF_TASKPARM(type_, ptr_) (*((type_ *) (ptr_)))
+  #if defined(OS_PRODUCT_NAME_SIZE)
+    #undef OS_PRODUCT_NAME_SIZE
+  #endif /* if defined(OS_PRODUCT_NAME_SIZE) */
+  #define OS_PRODUCT_NAME_SIZE 0x6u /* 6 */
 
 
-  #if defined(CONCAT)
-    #undef CONCAT
-  #endif /* if defined(CONCAT) */
-  #define CONCAT(a_, b_) a_ ## b_
+  #if defined(MEMORY_REGION_SIZE_IN_BYTES)
+    #undef MEMORY_REGION_SIZE_IN_BYTES
+  #endif /* if defined(MEMORY_REGION_SIZE_IN_BYTES) */
+  #define MEMORY_REGION_SIZE_IN_BYTES CONFIG_MEMORY_REGION_SIZE_IN_BLOCKS *CONFIG_MEMORY_REGION_BLOCK_SIZE
 
 
-  #if defined(QUOTE)
-    #undef QUOTE
-  #endif /* if defined(QUOTE) */
-  #define QUOTE(a_) #a_
+  #if defined(OK)
+    #undef OK
+  #endif /* if defined(OK) */
+  #define OK(expr_) (ReturnOK == (expr_))
 
 
-  #if defined(TO_FUNCTION)
-    #undef TO_FUNCTION
-  #endif /* if defined(TO_FUNCTION) */
-  #define TO_FUNCTION(a_, b_) CONCAT(a_, b_)
+  #if defined(ERROR)
+    #undef ERROR
+  #endif /* if defined(ERROR) */
+  #define ERROR(expr_) (ReturnError == (expr_))
 
 
-  #if defined(TO_LITERAL)
-    #undef TO_LITERAL
-  #endif /* if defined(TO_LITERAL) */
-  #define TO_LITERAL(a_) QUOTE(a_)
+  #if defined(FUNCTION_ENTER)
+    #undef FUNCTION_ENTER
+  #endif /* if defined(FUNCTION_ENTER) */
+  #define FUNCTION_ENTER Return_t ret = ReturnError
 
 
-  #if defined(MAGIC_CONST)
-    #undef MAGIC_CONST
-  #endif /* if defined(MAGIC_CONST) */
-  #define MAGIC_CONST 0xB16B00B5u /* https://en.wikipedia.org/wiki/Hexspeak */
+  #if defined(FUNCTION_EXIT)
+    #undef FUNCTION_EXIT
+  #endif /* if defined(FUNCTION_EXIT) */
+  #define FUNCTION_EXIT return(ret)
 
 
-  #if defined(CALCMAGIC)
-    #undef CALCMAGIC
-  #endif /* if defined(CALCMAGIC) */
-  #define CALCMAGIC(ptr_) (((Word_t) (ptr_)) ^ MAGIC_CONST)
+  #if defined(__PointerIsNotNull__)
+    #undef __PointerIsNotNull__
+  #endif /* if defined(__PointerIsNotNull__) */
+  #define __PointerIsNotNull__(addr_) (null != (addr_))
 
 
-  #if defined(OKMAGIC)
-    #undef OKMAGIC
-  #endif /* if defined(OKMAGIC) */
-  #define OKMAGIC(ptr_) (CALCMAGIC(ptr_) == (ptr_)->magic)
+  #if defined(__PointerIsNull__)
+    #undef __PointerIsNull__
+  #endif /* if defined(__PointerIsNull__) */
+  #define __PointerIsNull__(addr_) (null == (addr_))
 
 
-  #if defined(OKADDR)
-    #undef OKADDR
-  #endif /* if defined(OKADDR) */
-  #define OKADDR(region_, addr_) (((const volatile Addr_t *) (addr_) >= (Addr_t *) ((region_)->mem)) && ((const volatile Addr_t *) (addr_) < \
-          (Addr_t *) ((region_)->mem + MEMORY_REGION_SIZE_IN_BYTES)))
+  #if defined(__ReturnOk__)
+    #undef __ReturnOk__
+  #endif /* if defined(__ReturnOk__) */
+  #define __ReturnOk__() ret = ReturnOK
 
 
-  #if defined(INUSE)
-    #undef INUSE
-  #endif /* if defined(INUSE) */
-  #define INUSE 0xAAu /* 170 */
-
-
-  #if defined(FREE)
-    #undef FREE
-  #endif /* if defined(FREE) */
-  #define FREE 0xD5u /* 213 */
+  #if defined(__AssertOnElse__)
+    #undef __AssertOnElse__
+  #endif /* if defined(__AssertOnElse__()) */
+  #if defined(CONFIG_ENABLE_SYSTEM_ASSERT)
+    #define __AssertOnElse__() xSystemAssert(__FILE__, __LINE__)
+  #else  /* if defined(CONFIG_ENABLE_SYSTEM_ASSERT) */
+    #define __AssertOnElse__()
+  #endif /* if defined(CONFIG_ENABLE_SYSTEM_ASSERT) */
 
 
 #endif /* ifndef DEFINES_H_ */

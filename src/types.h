@@ -3,7 +3,7 @@
  * @file types.h
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Kernel source for enumerated, structured and data type definitions
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -207,6 +207,52 @@
     Byte_t buffer[CONFIG_STREAM_BUFFER_BYTES];
     HalfWord_t length;
   } StreamBuffer_t;
+  typedef struct Volume_s {
+    HalfWord_t blockDeviceUID;
+    Word_t fatStartSector;
+    Word_t dataStartSector;
+    Word_t rootDirCluster;
+    Byte_t sectorsPerCluster;
+    HalfWord_t bytesPerSector;
+    HalfWord_t reservedSectors;
+    Byte_t numFATs;
+    Word_t sectorsPerFAT;
+    Base_t mounted;
+  } Volume_t;
+  typedef struct File_s {
+    struct Volume_s *volume;
+    Word_t firstCluster;
+    Word_t currentCluster;
+    Word_t fileSize;
+    Word_t position;
+    Byte_t mode;
+    Base_t isOpen;
+    Base_t isDirty;
+  } File_t;
+  typedef struct DirEntry_s {
+    Byte_t name[256];
+    Word_t size;
+    Word_t firstCluster;
+    Base_t isDirectory;
+    Base_t isReadOnly;
+    Base_t isHidden;
+    Base_t isSystem;
+  } DirEntry_t;
+  typedef struct Dir_s {
+    struct Volume_s *volume;
+    Word_t currentCluster;
+    HalfWord_t entryIndex;
+    Base_t isOpen;
+  } Dir_t;
+  typedef struct VolumeInfo_s {
+    Word_t totalClusters;
+    Word_t freeClusters;
+    Word_t totalBytes;
+    Word_t freeBytes;
+    HalfWord_t bytesPerSector;
+    Byte_t sectorsPerCluster;
+    Word_t bytesPerCluster;
+  } VolumeInfo_t;
 
 
 #endif /* ifndef TYPES_H_ */

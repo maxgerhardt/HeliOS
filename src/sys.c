@@ -3,7 +3,7 @@
  * @file sys.c
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Kernel source for system control
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -39,91 +39,91 @@ Flags_t flag;
 
 
 Return_t xSystemAssert(const char *file_, const int line_) {
-  RET_DEFINE;
+  FUNCTION_ENTER;
 
 #if defined(CONFIG_SYSTEM_ASSERT_BEHAVIOR)
     CONFIG_SYSTEM_ASSERT_BEHAVIOR(file_, line_);
-    RET_OK;
+    __ReturnOk__();
 #endif /* if defined(CONFIG_SYSTEM_ASSERT_BEHAVIOR) */
-  RET_RETURN;
+  FUNCTION_EXIT;
 }
 
 
 Return_t xSystemInit(void) {
-  RET_DEFINE;
+  FUNCTION_ENTER;
 
   if(OK(__MemoryInit__())) {
     if(OK(__PortInit__())) {
-      UNSETFLAG(OVERFLOW);
-      UNSETFLAG(RUNNING);
-      RET_OK;
+      __UnsetFlag__(OVERFLOW);
+      __UnsetFlag__(RUNNING);
+      __ReturnOk__();
     } else {
-      ASSERT;
+      __AssertOnElse__();
     }
   } else {
-    ASSERT;
+    __AssertOnElse__();
   }
 
-  RET_RETURN;
+  FUNCTION_EXIT;
 }
 
 
 Return_t xSystemHalt(void) {
-  RET_DEFINE;
-  DISABLE_INTERRUPTS();
+  FUNCTION_ENTER;
+  __DisableInterrupts__();
 
   for(;;) {
     /* Do nothing - literally. */
   }
 
-  RET_RETURN;
+  FUNCTION_EXIT;
 }
 
 
 Return_t xSystemGetSystemInfo(SystemInfo_t **info_) {
-  RET_DEFINE;
+  FUNCTION_ENTER;
 
-  if(NOTNULLPTR(info_)) {
+  if(__PointerIsNotNull__(info_)) {
     if(OK(__HeapAllocateMemory__((volatile Addr_t **) info_, sizeof(SystemInfo_t)))) {
-      if(NOTNULLPTR(*info_)) {
+      if(__PointerIsNotNull__(*info_)) {
         if(OK(__memcpy__((*info_)->productName, OS_PRODUCT_NAME, OS_PRODUCT_NAME_SIZE))) {
           (*info_)->majorVersion = OS_MAJOR_VERSION_NO;
           (*info_)->minorVersion = OS_MINOR_VERSION_NO;
           (*info_)->patchVersion = OS_PATCH_VERSION_NO;
 
-          if(FLAGSET(LITTLEEND)) {
+          if(__FlagIsSet__(LITTLEEND)) {
             (*info_)->littleEndian = true;
           } else {
             (*info_)->littleEndian = false;
           }
 
           if(OK(xTaskGetNumberOfTasks(&(*info_)->numberOfTasks))) {
-            RET_OK;
+            __ReturnOk__();
           } else {
-            ASSERT;
+            __AssertOnElse__();
 
 
             /* Free heap memory because xTaskGetNumberOfTasks() failed. */
             __HeapFreeMemory__(*info_);
           }
         } else {
-          ASSERT;
+          __AssertOnElse__();
 
 
           /* Free heap memory because __memcpy__() failed. */
           __HeapFreeMemory__(*info_);
         }
       } else {
-        ASSERT;
+        __AssertOnElse__();
       }
     } else {
-      ASSERT;
+      __AssertOnElse__();
     }
   } else {
-    ASSERT;
+    __AssertOnElse__();
   }
 
-  RET_RETURN;
+  FUNCTION_EXIT;
 }
 
 
@@ -132,7 +132,7 @@ Return_t xSystemGetSystemInfo(SystemInfo_t **info_) {
 
   /* For unit testing only! */
   void __SysStateClear__(void) {
-    __memset__(&flag, 0x0, sizeof(Flags_t));
+    __memset__(&flag, nil, sizeof(Flags_t));
 
     return;
   }

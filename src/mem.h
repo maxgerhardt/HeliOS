@@ -3,7 +3,7 @@
  * @file mem.h
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Kernel source for memory management
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -27,6 +27,37 @@
   #include "sys.h"
   #include "task.h"
   #include "timer.h"
+
+
+  #if defined(MAGIC_CONST)
+    #undef MAGIC_CONST
+  #endif /* if defined(MAGIC_CONST) */
+  #define MAGIC_CONST 0xB16B00B5u /* https://en.wikipedia.org/wiki/Hexspeak */
+
+
+  #if defined(INUSE)
+    #undef INUSE
+  #endif /* if defined(INUSE) */
+  #define INUSE 0xAAu /* 170 */
+
+
+  #if defined(FREE)
+    #undef FREE
+  #endif /* if defined(FREE) */
+  #define FREE 0xD5u /* 213 */
+
+
+  #if defined(MEMORY_REGION_CHECK_OPTION_WO_ADDR)
+    #undef MEMORY_REGION_CHECK_OPTION_WO_ADDR
+  #endif /* if defined(MEMORY_REGION_CHECK_OPTION_WO_ADDR) */
+  #define MEMORY_REGION_CHECK_OPTION_WO_ADDR 0x1u /* 1 */
+
+
+  #if defined(MEMORY_REGION_CHECK_OPTION_W_ADDR)
+    #undef MEMORY_REGION_CHECK_OPTION_W_ADDR
+  #endif /* if defined(MEMORY_REGION_CHECK_OPTION_W_ADDR) */
+  #define MEMORY_REGION_CHECK_OPTION_W_ADDR 0x2u /* 2 */
+
 
   #ifdef __cplusplus
     extern "C" {

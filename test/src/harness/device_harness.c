@@ -3,7 +3,7 @@
  * @file device_harness.c
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Unit testing sources
- * @version 0.4.2
+ * @version 0.5.0
  * @date 2023-03-19
  * 
  * @copyright
@@ -43,11 +43,11 @@ void device_harness(void) {
   unit_try(true == res);
   unit_end();
   unit_begin("xDeviceRead()");
-  bytes2 = zero;
+  bytes2 = nil;
   data2 = null;
   unit_try(OK(xDeviceRead(0xFFu, &bytes2, &data2)));
   unit_try(0x26u == bytes2);
-  unit_try(zero == strncmp((char *) data2, "THIS IS A TEST OF THE LOOPBACK DEVICE\0", bytes2));
+  unit_try(nil == strncmp((char *) data2, "THIS IS A TEST OF THE LOOPBACK DEVICE\0", bytes2));
   unit_try(OK(xMemFree(data2)));
   unit_end();
   unit_begin("xDeviceSimpleWrite()");
@@ -55,7 +55,7 @@ void device_harness(void) {
   unit_try(OK(xDeviceSimpleWrite(0xFFu, data3)));
   unit_end();
   unit_begin("xDeviceSimpleRead()");
-  data4 = zero;
+  data4 = nil;
   unit_try(OK(xDeviceSimpleRead(0xFFu, &data4)));
   unit_try(0xFAu == data4);
   unit_end();
