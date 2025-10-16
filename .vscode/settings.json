@@ -76,13 +76,5 @@
   "C_Cpp.default.defines": [
     "POSIX_ARCH_OTHER",
     "UNIT_TEST_COLORIZE"
-  ],
-  "files.associations": {
-    "stream_harness.h": "c",
-    "task.h": "c",
-    "timer.h": "c",
-    "types.h": "c",
-    "config.h": "c",
-    "mem.h": "c"
-  }
+  ]
 }
