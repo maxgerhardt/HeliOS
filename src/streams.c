@@ -14,7 +14,7 @@
  * 
  */
 /*UNCRUSTIFY-ON*/
-#include "stream.h"
+#include "streams.h"
 
 #define __StreamLengthNonZero__() (nil < stream_->length)
 
