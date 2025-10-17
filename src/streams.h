@@ -1,6 +1,6 @@
 /*UNCRUSTIFY-OFF*/
 /**
- * @file stream.h
+ * @file streams.h
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Kernel source for stream buffers for inter-task communication
  * @version 0.5.0

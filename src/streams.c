@@ -1,6 +1,6 @@
 /*UNCRUSTIFY-OFF*/
 /**
- * @file stream.c
+ * @file streams.c
  * @author Manny Peterson <manny@heliosproj.org>
  * @brief Kernel source for stream buffers for inter-task communication
  * @version 0.5.0
@@ -14,7 +14,7 @@
  * 
  */
 /*UNCRUSTIFY-ON*/
-#include "stream.h"
+#include "streams.h"
 
 #define __StreamLengthNonZero__() (nil < stream_->length)
 

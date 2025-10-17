@@ -16,6 +16,7 @@
 /*UNCRUSTIFY-ON*/
 #include <Arduino.h>
 #include <HeliOS.h>
+#include <arduino_helpers.h>
 
 
 void taskSender_main(xTask task_, xTaskParm parm_) {

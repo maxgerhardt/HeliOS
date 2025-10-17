@@ -23,7 +23,7 @@
   #include "port.h"
   #include "mem.h"
   #include "queue.h"
-  #include "stream.h"
+  #include "streams.h"
   #include "sys.h"
   #include "task.h"
   #include "timer.h"

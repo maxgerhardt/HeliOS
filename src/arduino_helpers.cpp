@@ -13,7 +13,7 @@
       char buf[size_ + 1];
 
 
-      if(NOTNULLPTR(bytes_) && (zero < size_)) {
+      if((bytes_ != nullptr) && ((xSize)0 < size_)) {
         for(i = 0; i < size_; i++) {
           buf[i] = (char) bytes_[i];
         }
