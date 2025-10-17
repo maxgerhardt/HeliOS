@@ -119,7 +119,163 @@ void memory_1_harness(void) {
   unit_try(OK(xMemFree(mem03)));
   unit_end();
 
+  /* Edge case tests */
+  test_memory_edge_cases();
+
   return;
+}
+
+
+void test_memory_edge_cases(void) {
+  volatile Addr_t *ptr1 = null;
+  volatile Addr_t *ptr2 = null;
+  Size_t size = nil;
+
+  /* Test NULL pointer handling */
+  unit_begin("Edge Case - xMemAlloc() NULL Pointer");
+  unit_try(!OK(xMemAlloc(null, 128)));
+  unit_end();
+
+  /* Test zero size allocation */
+  unit_begin("Edge Case - xMemAlloc() Zero Size");
+  ptr1 = null;
+  unit_try(!OK(xMemAlloc(&ptr1, 0)));
+  unit_try(null == ptr1);
+  unit_end();
+
+  /* Test oversized allocation */
+  unit_begin("Edge Case - xMemAlloc() Oversized");
+  ptr1 = null;
+  unit_try(!OK(xMemAlloc(&ptr1, 0xFFFFFFFFu)));
+  unit_try(null == ptr1);
+  unit_end();
+
+  /* Test freeing NULL pointer */
+  unit_begin("Edge Case - xMemFree() NULL Pointer");
+  unit_try(!OK(xMemFree(null)));
+  unit_end();
+
+  /* Test double free */
+  unit_begin("Edge Case - xMemFree() Double Free");
+  ptr1 = null;
+  unit_try(OK(xMemAlloc(&ptr1, 128)));
+  unit_try(null != ptr1);
+  unit_try(OK(xMemFree(ptr1)));
+  /* Attempting to free again should fail */
+  unit_try(!OK(xMemFree(ptr1)));
+  unit_end();
+
+  /* Test getting size of NULL pointer */
+  unit_begin("Edge Case - xMemGetSize() NULL Pointer");
+  size = nil;
+  unit_try(!OK(xMemGetSize(null, &size)));
+  unit_end();
+
+  /* Test getting size with NULL output parameter */
+  unit_begin("Edge Case - xMemGetSize() NULL Output");
+  ptr1 = null;
+  unit_try(OK(xMemAlloc(&ptr1, 128)));
+  unit_try(null != ptr1);
+  unit_try(!OK(xMemGetSize(ptr1, null)));
+  unit_try(OK(xMemFree(ptr1)));
+  unit_end();
+
+  /* Test xMemGetUsed with NULL parameter */
+  unit_begin("Edge Case - xMemGetUsed() NULL Pointer");
+  unit_try(!OK(xMemGetUsed(null)));
+  unit_end();
+
+  /* Test xMemGetHeapStats with NULL parameter */
+  unit_begin("Edge Case - xMemGetHeapStats() NULL Pointer");
+  unit_try(!OK(xMemGetHeapStats(null)));
+  unit_end();
+
+  /* Test xMemGetKernelStats with NULL parameter */
+  unit_begin("Edge Case - xMemGetKernelStats() NULL Pointer");
+  unit_try(!OK(xMemGetKernelStats(null)));
+  unit_end();
+
+  /* Test maximum number of allocations */
+  unit_begin("Edge Case - Maximum Allocations");
+  {
+    #define MAX_TEST_ALLOCS 100
+    volatile Addr_t *ptrs[MAX_TEST_ALLOCS];
+    int i;
+    int allocCount = 0;
+
+    /* Allocate as many small blocks as possible */
+    for(i = 0; i < MAX_TEST_ALLOCS; i++) {
+      ptrs[i] = null;
+
+      if(OK(xMemAlloc(&ptrs[i], 64))) {
+        unit_try(null != ptrs[i]);
+        allocCount++;
+      } else {
+        break;
+      }
+    }
+
+    /* Should have allocated at least some blocks */
+    unit_try(allocCount > 0);
+
+    /* Free all allocated blocks */
+    for(i = 0; i < allocCount; i++) {
+      unit_try(OK(xMemFree(ptrs[i])));
+    }
+
+    /* Verify all memory is freed */
+    unit_try(OK(xMemGetUsed(&size)));
+    unit_try(0x0u == size);
+  }
+  unit_end();
+
+  /* Test fragmentation resilience */
+  unit_begin("Edge Case - Memory Fragmentation");
+  {
+    volatile Addr_t *frag1 = null;
+    volatile Addr_t *frag2 = null;
+    volatile Addr_t *frag3 = null;
+
+    /* Create fragmented memory pattern */
+    unit_try(OK(xMemAlloc(&frag1, 1024)));
+    unit_try(OK(xMemAlloc(&frag2, 1024)));
+    unit_try(OK(xMemAlloc(&frag3, 1024)));
+
+    /* Free middle block */
+    unit_try(OK(xMemFree(frag2)));
+
+    /* Try to allocate a block that fits in the freed space */
+    frag2 = null;
+    unit_try(OK(xMemAlloc(&frag2, 512)));
+    unit_try(null != frag2);
+
+    /* Cleanup */
+    unit_try(OK(xMemFree(frag1)));
+    unit_try(OK(xMemFree(frag2)));
+    unit_try(OK(xMemFree(frag3)));
+  }
+  unit_end();
+
+  /* Test allocation after xMemFreeAll */
+  unit_begin("Edge Case - Allocation After xMemFreeAll()");
+  ptr1 = null;
+  ptr2 = null;
+  unit_try(OK(xMemAlloc(&ptr1, 256)));
+  unit_try(OK(xMemAlloc(&ptr2, 512)));
+
+  /* Free all memory */
+  unit_try(OK(xMemFreeAll()));
+
+  /* Verify memory is freed */
+  unit_try(OK(xMemGetUsed(&size)));
+  unit_try(0x0u == size);
+
+  /* Allocate again - should succeed */
+  ptr1 = null;
+  unit_try(OK(xMemAlloc(&ptr1, 128)));
+  unit_try(null != ptr1);
+  unit_try(OK(xMemFree(ptr1)));
+  unit_end();
 }
 
 

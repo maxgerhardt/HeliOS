@@ -127,6 +127,7 @@ static Return_t __ReadCluster__(const Volume_t *vol_, Word_t cluster_, Byte_t **
 static Return_t __GetFATEntry__(const Volume_t *vol_, Word_t cluster_, Word_t *nextCluster_);
 static Return_t __SetFATEntry__(const Volume_t *vol_, Word_t cluster_, Word_t value_);
 static Word_t __ClusterToSector__(const Volume_t *vol_, Word_t cluster_);
+static Return_t __FindFreeCluster__(const Volume_t *vol_, Word_t startHint_, Word_t *freeCluster_);
 
 
 Return_t xFSMount(Volume_t **volume_, const HalfWord_t blockDeviceUID_) {
@@ -171,7 +172,7 @@ Return_t xFSMount(Volume_t **volume_, const HalfWord_t blockDeviceUID_) {
 
 
           /* Free boot sector buffer */
-          if(OK(__KernelFreeMemory__(bootSectorData))) {
+          if(OK(xMemFree((Addr_t *) bootSectorData))) {
             *volume_ = vol;
             __ReturnOk__();
           } else {
@@ -179,7 +180,7 @@ Return_t xFSMount(Volume_t **volume_, const HalfWord_t blockDeviceUID_) {
           }
         } else {
           /* Invalid FAT32 parameters */
-          __KernelFreeMemory__(bootSectorData);
+          xMemFree((Addr_t *) bootSectorData);
           __KernelFreeMemory__(vol);
           __AssertOnElse__();
         }
@@ -323,8 +324,62 @@ Return_t xFSFormat(const HalfWord_t blockDeviceUID_, const Byte_t *volumeLabel_)
 
     /* Write boot sector */
     if(OK(__WriteSector__(&tempVol, 0, bootSector))) {
+      Byte_t *fatSector = null;
+      Word_t sector = 0;
+      Word_t fat = 0;
+      Base_t fatInitSuccess = true;
+
+      /* Free boot sector as we're done with it */
       xMemFree((Addr_t *) bootSector);
-      __ReturnOk__();
+
+      /* Initialize FAT tables - allocate a zero-filled sector buffer */
+      if(OK(xMemAlloc((volatile Addr_t **) &fatSector, bytesPerSector))) {
+        __memset__(fatSector, 0x00u, bytesPerSector);
+
+        /* Write zeros to all sectors of all FAT copies */
+        for(fat = 0; fat < numFATs && fatInitSuccess; fat++) {
+          Word_t fatStartSector = fatStart + (fat * sectorsPerFAT);
+
+          for(sector = 0; sector < sectorsPerFAT && fatInitSuccess; sector++) {
+            if(ERROR(__WriteSector__(&tempVol, fatStartSector + sector, fatSector))) {
+              fatInitSuccess = false;
+            }
+          }
+        }
+
+        if(fatInitSuccess) {
+          /* Now set special FAT entries:
+           * - Cluster 0: Media descriptor (0x0FFFFFF8)
+           * - Cluster 1: Clean/dirty flag (0x0FFFFFFF)
+           * - Cluster 2: Root directory (EOC marker 0x0FFFFFFF) */
+          if(OK(__SetFATEntry__(&tempVol, 0, 0x0FFFFFF8u)) && OK(__SetFATEntry__(&tempVol, 1, 0x0FFFFFFFu)) && OK(__SetFATEntry__(&tempVol, 2, FAT32_EOC_MAX))) {
+            /* Initialize root directory cluster to zeros */
+            Word_t rootFirstSector = __ClusterToSector__(&tempVol, rootDirCluster);
+
+            for(sector = 0; sector < sectorsPerCluster && fatInitSuccess; sector++) {
+              if(ERROR(__WriteSector__(&tempVol, rootFirstSector + sector, fatSector))) {
+                fatInitSuccess = false;
+              }
+            }
+
+            xMemFree((Addr_t *) fatSector);
+
+            if(fatInitSuccess) {
+              __ReturnOk__();
+            } else {
+              __AssertOnElse__();
+            }
+          } else {
+            xMemFree((Addr_t *) fatSector);
+            __AssertOnElse__();
+          }
+        } else {
+          xMemFree((Addr_t *) fatSector);
+          __AssertOnElse__();
+        }
+      } else {
+        __AssertOnElse__();
+      }
     } else {
       xMemFree((Addr_t *) bootSector);
       __AssertOnElse__();
@@ -520,11 +575,19 @@ Return_t xFileWrite(File_t *file_, const Size_t size_, const Byte_t *data_) {
 
     /* If at start and no clusters allocated, allocate first cluster */
     if(file_->firstCluster == 0) {
-      /* Find free cluster - simplified: just use cluster 3 for now */
-      file_->firstCluster = 3;
-      file_->currentCluster = 3;
-      __SetFATEntry__(file_->volume, 3, FAT32_EOC_MAX);
-      file_->isDirty = true;
+      /* Find a free cluster starting from cluster 3 */
+      Word_t freeCluster = 0;
+
+      if(OK(__FindFreeCluster__(file_->volume, 3u, &freeCluster))) {
+        file_->firstCluster = freeCluster;
+        file_->currentCluster = freeCluster;
+        __SetFATEntry__(file_->volume, freeCluster, FAT32_EOC_MAX);
+        file_->isDirty = true;
+      } else {
+        /* No free clusters available */
+        __AssertOnElse__();
+        FUNCTION_EXIT;
+      }
     }
 
 
@@ -575,14 +638,27 @@ Return_t xFileWrite(File_t *file_, const Size_t size_, const Byte_t *data_) {
         if(bytesWritten < bytesToWrite) {
           if(OK(__GetFATEntry__(file_->volume, file_->currentCluster, &nextCluster))) {
             if(nextCluster >= FAT32_EOC_MIN) {
-              /* Need to allocate new cluster - simplified */
-              nextCluster = file_->currentCluster + 1;
-              __SetFATEntry__(file_->volume, file_->currentCluster, nextCluster);
-              __SetFATEntry__(file_->volume, nextCluster, FAT32_EOC_MAX);
+              /* Need to allocate new cluster - find a free one */
+              Word_t newCluster = 0;
+
+              /* Start searching from current cluster + 1 for better locality */
+              if(OK(__FindFreeCluster__(file_->volume, file_->currentCluster + 1u, &newCluster))) {
+                /* Link current cluster to new cluster */
+                __SetFATEntry__(file_->volume, file_->currentCluster, newCluster);
+                /* Mark new cluster as end of chain */
+                __SetFATEntry__(file_->volume, newCluster, FAT32_EOC_MAX);
+                nextCluster = newCluster;
+              } else {
+                /* No free clusters available */
+                __KernelFreeMemory__(clusterData);
+                __AssertOnElse__();
+                FUNCTION_EXIT;
+              }
             }
 
             file_->currentCluster = nextCluster;
           } else {
+            __KernelFreeMemory__(clusterData);
             __AssertOnElse__();
             FUNCTION_EXIT;
           }
@@ -1247,7 +1323,7 @@ static Return_t __ReadCluster__(const Volume_t *vol_, Word_t cluster_, Byte_t **
 
 
           /* Free sector buffer */
-          __KernelFreeMemory__(sectorData);
+          xMemFree((Addr_t *) sectorData);
         } else {
           /* Failed to read sector - clean up and fail */
           __KernelFreeMemory__(buffer);
@@ -1301,7 +1377,7 @@ static Return_t __GetFATEntry__(const Volume_t *vol_, Word_t cluster_, Word_t *n
 
 
       /* Free sector buffer */
-      __KernelFreeMemory__(sectorData);
+      xMemFree((Addr_t *) sectorData);
       *nextCluster_ = fatEntry;
       __ReturnOk__();
     } else {
@@ -1353,15 +1429,88 @@ static Return_t __SetFATEntry__(const Volume_t *vol_, Word_t cluster_, Word_t va
           __WriteSector__(vol_, fatSector + (i * vol_->sectorsPerFAT), sectorData);
         }
 
-        __KernelFreeMemory__(sectorData);
+        xMemFree((Addr_t *) sectorData);
         __ReturnOk__();
       } else {
-        __KernelFreeMemory__(sectorData);
+        xMemFree((Addr_t *) sectorData);
         __AssertOnElse__();
       }
     } else {
       __AssertOnElse__();
     }
+  } else {
+    __AssertOnElse__();
+  }
+
+  FUNCTION_EXIT;
+}
+
+
+/**
+ * @brief Find a free cluster in the FAT
+ * @param  vol_          Pointer to mounted volume
+ * @param  startHint_    Cluster number to start searching from (hint for efficiency)
+ * @param  freeCluster_  Pointer to receive free cluster number
+ * @return               ReturnOK on success, ReturnError if no free cluster found
+ */
+static Return_t __FindFreeCluster__(const Volume_t *vol_, Word_t startHint_, Word_t *freeCluster_) {
+  FUNCTION_ENTER;
+
+
+  Word_t cluster = 0;
+  Word_t maxCluster = 0;
+  Word_t fatEntry = 0;
+  Word_t searchStart = 0;
+
+
+  if(__PointerIsNotNull__(vol_) && __PointerIsNotNull__(freeCluster_)) {
+    /* Calculate maximum cluster number based on FAT size */
+    /* Each FAT entry is 4 bytes, so total clusters = (sectorsPerFAT * bytesPerSector) / 4 */
+    maxCluster = (vol_->sectorsPerFAT * vol_->bytesPerSector) / 4u;
+
+    /* Limit to reasonable maximum to avoid excessive searching */
+    if(maxCluster > 0x10000u) {
+      maxCluster = 0x10000u; /* Limit to 64K clusters for now */
+    }
+
+    /* Start from hint, but ensure we start from at least cluster 3 */
+    /* Clusters 0 and 1 are reserved, cluster 2 is root directory */
+    searchStart = (startHint_ >= 3u) ? startHint_ : 3u;
+
+    /* Search for free cluster starting from hint */
+    for(cluster = searchStart; cluster < maxCluster; cluster++) {
+      if(OK(__GetFATEntry__(vol_, cluster, &fatEntry))) {
+        if(fatEntry == FAT32_FREE_CLUSTER) {
+          /* Found a free cluster */
+          *freeCluster_ = cluster;
+          __ReturnOk__();
+        }
+      } else {
+        /* Error reading FAT entry */
+        __AssertOnElse__();
+        FUNCTION_EXIT;
+      }
+    }
+
+    /* If we didn't find anything from the hint to end, search from cluster 3 to hint */
+    if(searchStart > 3u) {
+      for(cluster = 3u; cluster < searchStart; cluster++) {
+        if(OK(__GetFATEntry__(vol_, cluster, &fatEntry))) {
+          if(fatEntry == FAT32_FREE_CLUSTER) {
+            /* Found a free cluster */
+            *freeCluster_ = cluster;
+            __ReturnOk__();
+          }
+        } else {
+          /* Error reading FAT entry */
+          __AssertOnElse__();
+          FUNCTION_EXIT;
+        }
+      }
+    }
+
+    /* No free cluster found */
+    __AssertOnElse__();
   } else {
     __AssertOnElse__();
   }

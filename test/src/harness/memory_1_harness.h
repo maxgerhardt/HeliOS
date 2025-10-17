@@ -42,6 +42,7 @@
   #endif /* ifdef __cplusplus */
   void memory_1_harness(void);
   void memory_1_harness_task(Task_t *task_, TaskParm_t *parm_);
+  void test_memory_edge_cases(void);
 
   #ifdef __cplusplus
     }

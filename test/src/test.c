@@ -26,6 +26,8 @@ extern void __RAMDiskStateClear__(void);
 int main(int argc, char **argv) {
   unit_init();
   reset();
+  sys_harness();
+  reset();
   memory_1_harness();
   reset();
   memory_2_harness();
