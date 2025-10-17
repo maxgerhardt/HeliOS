@@ -172,7 +172,7 @@ Return_t xFSMount(Volume_t **volume_, const HalfWord_t blockDeviceUID_) {
 
 
           /* Free boot sector buffer */
-          if(OK(xMemFree((Addr_t *) bootSectorData))) {
+          if(OK(__KernelFreeMemory__(bootSectorData))) {
             *volume_ = vol;
             __ReturnOk__();
           } else {
@@ -180,7 +180,7 @@ Return_t xFSMount(Volume_t **volume_, const HalfWord_t blockDeviceUID_) {
           }
         } else {
           /* Invalid FAT32 parameters */
-          xMemFree((Addr_t *) bootSectorData);
+          __KernelFreeMemory__(bootSectorData);
           __KernelFreeMemory__(vol);
           __AssertOnElse__();
         }
@@ -460,6 +460,8 @@ Return_t xFileRead(File_t *file_, const Size_t size_, Byte_t **data_) {
 
 
   if(__PointerIsNotNull__(file_) && __PointerIsNotNull__(data_) && file_->isOpen && (nil < size_)) {
+    /* Initialize output pointer to null for error cases */
+    *data_ = null;
     clusterSize = (Word_t) file_->volume->bytesPerSector * file_->volume->sectorsPerCluster;
 
 
@@ -475,8 +477,8 @@ Return_t xFileRead(File_t *file_, const Size_t size_, Byte_t **data_) {
     }
 
 
-    /* Allocate buffer for read data */
-    if(OK(__KernelAllocateMemory__((volatile Addr_t **) &buffer, bytesToRead))) {
+    /* Allocate buffer for read data from user heap (returned to caller) */
+    if(OK(xMemAlloc((volatile Addr_t **) &buffer, bytesToRead))) {
       /* If not at start of file, navigate to correct cluster */
       if(file_->currentCluster == 0) {
         file_->currentCluster = file_->firstCluster;
@@ -516,13 +518,13 @@ Return_t xFileRead(File_t *file_, const Size_t size_, Byte_t **data_) {
 
               file_->currentCluster = nextCluster;
             } else {
-              __KernelFreeMemory__(buffer);
+              xMemFree(buffer);
               __AssertOnElse__();
               FUNCTION_EXIT;
             }
           }
         } else {
-          __KernelFreeMemory__(buffer);
+          xMemFree(buffer);
           __AssertOnElse__();
           FUNCTION_EXIT;
         }
@@ -1184,9 +1186,8 @@ static Return_t __ReadSector__(const Volume_t *vol_, Word_t sector_, Byte_t **da
 
 
   if(__PointerIsNotNull__(vol_) && __PointerIsNotNull__(data_)) {
-    /* Allocate command structure from user heap (required by
-     * xDeviceConfigDevice) */
-    if(OK(xMemAlloc((volatile Addr_t **) &cmd, blockSize))) {
+    /* Allocate command structure from kernel heap (required by kernel-level device API) */
+    if(OK(__KernelAllocateMemory__((volatile Addr_t **) &cmd, blockSize))) {
       /* Set up block device command to read single sector */
       cmd->command = 0x01u; /* BLOCK_CMD_READ_SINGLE */
       cmd->blockNumber = sector_;
@@ -1195,19 +1196,19 @@ static Return_t __ReadSector__(const Volume_t *vol_, Word_t sector_, Byte_t **da
 
 
       /* Configure block device to address this sector */
-      if(OK(xDeviceConfigDevice(vol_->blockDeviceUID, &blockSize, (Addr_t *) cmd))) {
+      if(OK(__DeviceConfigDevice__(vol_->blockDeviceUID, &blockSize, (Addr_t *) cmd))) {
         /* Read the sector data */
         readSize = (Size_t) vol_->bytesPerSector;
 
-        if(OK(xDeviceRead(vol_->blockDeviceUID, &readSize, (Addr_t **) data_))) {
-          xMemFree((Addr_t *) cmd);
+        if(OK(__DeviceRead__(vol_->blockDeviceUID, &readSize, (Addr_t **) data_))) {
+          __KernelFreeMemory__(cmd);
           __ReturnOk__();
         } else {
-          xMemFree((Addr_t *) cmd);
+          __KernelFreeMemory__(cmd);
           __AssertOnElse__();
         }
       } else {
-        xMemFree((Addr_t *) cmd);
+        __KernelFreeMemory__(cmd);
         __AssertOnElse__();
       }
     } else {
@@ -1238,9 +1239,8 @@ static Return_t __WriteSector__(const Volume_t *vol_, Word_t sector_, const Byte
 
 
   if(__PointerIsNotNull__(vol_) && __PointerIsNotNull__(data_)) {
-    /* Allocate command structure from user heap (required by
-     * xDeviceConfigDevice) */
-    if(OK(xMemAlloc((volatile Addr_t **) &cmd, blockSize))) {
+    /* Allocate command structure from kernel heap (required by kernel-level device API) */
+    if(OK(__KernelAllocateMemory__((volatile Addr_t **) &cmd, blockSize))) {
       /* Set up block device command to write single sector */
       cmd->command = 0x03u; /* BLOCK_CMD_WRITE_SINGLE */
       cmd->blockNumber = sector_;
@@ -1249,19 +1249,19 @@ static Return_t __WriteSector__(const Volume_t *vol_, Word_t sector_, const Byte
 
 
       /* Configure block device to address this sector */
-      if(OK(xDeviceConfigDevice(vol_->blockDeviceUID, &blockSize, (Addr_t *) cmd))) {
+      if(OK(__DeviceConfigDevice__(vol_->blockDeviceUID, &blockSize, (Addr_t *) cmd))) {
         /* Write the sector data */
         writeSize = (Size_t) vol_->bytesPerSector;
 
-        if(OK(xDeviceWrite(vol_->blockDeviceUID, &writeSize, (Addr_t *) data_))) {
-          xMemFree((Addr_t *) cmd);
+        if(OK(__DeviceWrite__(vol_->blockDeviceUID, &writeSize, (Addr_t *) data_))) {
+          __KernelFreeMemory__(cmd);
           __ReturnOk__();
         } else {
-          xMemFree((Addr_t *) cmd);
+          __KernelFreeMemory__(cmd);
           __AssertOnElse__();
         }
       } else {
-        xMemFree((Addr_t *) cmd);
+        __KernelFreeMemory__(cmd);
         __AssertOnElse__();
       }
     } else {
@@ -1321,7 +1321,7 @@ static Return_t __ReadCluster__(const Volume_t *vol_, Word_t cluster_, Byte_t **
 
 
           /* Free sector buffer */
-          xMemFree((Addr_t *) sectorData);
+          __KernelFreeMemory__(sectorData);
         } else {
           /* Failed to read sector - clean up and fail */
           __KernelFreeMemory__(buffer);
@@ -1375,7 +1375,7 @@ static Return_t __GetFATEntry__(const Volume_t *vol_, Word_t cluster_, Word_t *n
 
 
       /* Free sector buffer */
-      xMemFree((Addr_t *) sectorData);
+      __KernelFreeMemory__(sectorData);
       *nextCluster_ = fatEntry;
       __ReturnOk__();
     } else {
@@ -1427,10 +1427,10 @@ static Return_t __SetFATEntry__(const Volume_t *vol_, Word_t cluster_, Word_t va
           __WriteSector__(vol_, fatSector + (i * vol_->sectorsPerFAT), sectorData);
         }
 
-        xMemFree((Addr_t *) sectorData);
+        __KernelFreeMemory__(sectorData);
         __ReturnOk__();
       } else {
-        xMemFree((Addr_t *) sectorData);
+        __KernelFreeMemory__(sectorData);
         __AssertOnElse__();
       }
     } else {
