@@ -120,6 +120,11 @@ static void __WriteLE32__(Byte_t *data_, Word_t value_) {
 }
 
 
+/* Mount tracking - tracks which block devices are currently mounted */
+#define MAX_MOUNTED_VOLUMES 8
+static HalfWord_t mountedDevices[MAX_MOUNTED_VOLUMES];
+static Byte_t mountedDeviceCount = 0;
+
 /* Forward declarations for helper functions */
 static Return_t __ReadSector__(const Volume_t *vol_, Word_t sector_, Byte_t **data_);
 static Return_t __WriteSector__(const Volume_t *vol_, Word_t sector_, const Byte_t *data_);
@@ -128,6 +133,9 @@ static Return_t __GetFATEntry__(const Volume_t *vol_, Word_t cluster_, Word_t *n
 static Return_t __SetFATEntry__(const Volume_t *vol_, Word_t cluster_, Word_t value_);
 static Word_t __ClusterToSector__(const Volume_t *vol_, Word_t cluster_);
 static Return_t __FindFreeCluster__(const Volume_t *vol_, Word_t startHint_, Word_t *freeCluster_);
+static Base_t __IsDeviceMounted__(const HalfWord_t blockDeviceUID_);
+static Return_t __AddMountedDevice__(const HalfWord_t blockDeviceUID_);
+static Return_t __RemoveMountedDevice__(const HalfWord_t blockDeviceUID_);
 
 
 Return_t xFSMount(Volume_t **volume_, const HalfWord_t blockDeviceUID_) {
@@ -140,6 +148,12 @@ Return_t xFSMount(Volume_t **volume_, const HalfWord_t blockDeviceUID_) {
 
 
   if(__PointerIsNotNull__(volume_)) {
+    /* Check if device is already mounted */
+    if(__IsDeviceMounted__(blockDeviceUID_)) {
+      __ReturnError__();
+      FUNCTION_EXIT;
+    }
+
     /* Allocate volume structure in kernel heap memory */
     if(OK(__KernelAllocateMemory__((volatile Addr_t **) &vol, sizeof(Volume_t)))) {
       /* Store block device UID for all I/O operations */
@@ -171,11 +185,19 @@ Return_t xFSMount(Volume_t **volume_, const HalfWord_t blockDeviceUID_) {
           vol->mounted = true;
 
 
-          /* Free boot sector buffer */
-          if(OK(__KernelFreeMemory__(bootSectorData))) {
-            *volume_ = vol;
-            __ReturnOk__();
+          /* Add device to mounted list */
+          if(OK(__AddMountedDevice__(blockDeviceUID_))) {
+            /* Free boot sector buffer */
+            if(OK(__KernelFreeMemory__(bootSectorData))) {
+              *volume_ = vol;
+              __ReturnOk__();
+            } else {
+              __AssertOnElse__();
+            }
           } else {
+            /* Failed to track mount - cleanup */
+            __KernelFreeMemory__(bootSectorData);
+            __KernelFreeMemory__(vol);
             __AssertOnElse__();
           }
         } else {
@@ -204,6 +226,8 @@ Return_t xFSUnmount(Volume_t *volume_) {
   FUNCTION_ENTER;
 
   if(__PointerIsNotNull__(volume_)) {
+    /* Remove device from mounted list */
+    __RemoveMountedDevice__(volume_->blockDeviceUID);
     volume_->mounted = false;
 
 
@@ -229,6 +253,12 @@ Return_t xFSGetVolumeInfo(const Volume_t *volume_, VolumeInfo_t **info_) {
 
 
   if(__PointerIsNotNull__(volume_) && __PointerIsNotNull__(info_)) {
+    /* Check if volume is mounted */
+    if(!volume_->mounted) {
+      __ReturnError__();
+      FUNCTION_EXIT;
+    }
+
     /* Allocate info structure in user heap (returned to caller) */
     if(OK(xMemAlloc((volatile Addr_t **) &info, sizeof(VolumeInfo_t)))) {
       info->bytesPerSector = volume_->bytesPerSector;
@@ -244,7 +274,7 @@ Return_t xFSGetVolumeInfo(const Volume_t *volume_, VolumeInfo_t **info_) {
       __AssertOnElse__();
     }
   } else {
-    __AssertOnElse__();
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -400,6 +430,12 @@ Return_t xFileOpen(File_t **file_, Volume_t *volume_, const Byte_t *path_, const
 
 
   if(__PointerIsNotNull__(file_) && __PointerIsNotNull__(volume_) && __PointerIsNotNull__(path_)) {
+    /* Check if volume is mounted */
+    if(!volume_->mounted) {
+      __ReturnError__();
+      FUNCTION_EXIT;
+    }
+
     /* Allocate file structure in kernel heap */
     if(OK(__KernelAllocateMemory__((volatile Addr_t **) &file, sizeof(File_t)))) {
       /* Store reference to parent volume */
@@ -872,6 +908,12 @@ Return_t xDirOpen(Dir_t **dir_, Volume_t *volume_, const Byte_t *path_) {
 
 
   if(__PointerIsNotNull__(dir_) && __PointerIsNotNull__(volume_) && __PointerIsNotNull__(path_)) {
+    /* Check if volume is mounted */
+    if(!volume_->mounted) {
+      __ReturnError__();
+      FUNCTION_EXIT;
+    }
+
     /* Allocate directory handle in kernel heap */
     if(OK(__KernelAllocateMemory__((volatile Addr_t **) &dir, sizeof(Dir_t)))) {
       dir->volume = volume_;
@@ -1103,6 +1145,12 @@ Return_t xFileExists(Volume_t *volume_, const Byte_t *path_, Base_t *exists_) {
    * Searching each directory for next component This is complex and deferred
    * for basic implementation */
   if(__PointerIsNotNull__(volume_) && __PointerIsNotNull__(path_) && __PointerIsNotNull__(exists_)) {
+    /* Check if volume is mounted */
+    if(!volume_->mounted) {
+      __ReturnError__();
+      FUNCTION_EXIT;
+    }
+
     /* TODO: Implement file lookup */
     *exists_ = false;
     __AssertOnElse__();
@@ -1529,12 +1577,72 @@ static Return_t __FindFreeCluster__(const Volume_t *vol_, Word_t startHint_, Wor
 }
 
 
+/**
+ * @brief Check if a block device is already mounted
+ * @param  blockDeviceUID_ Block device UID to check
+ * @return                 true if mounted, false if not
+ */
+static Base_t __IsDeviceMounted__(const HalfWord_t blockDeviceUID_) {
+  Byte_t i = 0;
+
+  for(i = 0; i < mountedDeviceCount; i++) {
+    if(mountedDevices[i] == blockDeviceUID_) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+/**
+ * @brief Add a block device to the mounted devices list
+ * @param  blockDeviceUID_ Block device UID to add
+ * @return                 ReturnOK on success, ReturnError if list is full
+ */
+static Return_t __AddMountedDevice__(const HalfWord_t blockDeviceUID_) {
+  if(mountedDeviceCount < MAX_MOUNTED_VOLUMES) {
+    mountedDevices[mountedDeviceCount] = blockDeviceUID_;
+    mountedDeviceCount++;
+    return ReturnOK;
+  }
+
+  return ReturnError;
+}
+
+
+/**
+ * @brief Remove a block device from the mounted devices list
+ * @param  blockDeviceUID_ Block device UID to remove
+ * @return                 ReturnOK on success, ReturnError if not found
+ */
+static Return_t __RemoveMountedDevice__(const HalfWord_t blockDeviceUID_) {
+  Byte_t i = 0;
+  Byte_t j = 0;
+
+  for(i = 0; i < mountedDeviceCount; i++) {
+    if(mountedDevices[i] == blockDeviceUID_) {
+      /* Shift remaining elements down */
+      for(j = i; j < mountedDeviceCount - 1; j++) {
+        mountedDevices[j] = mountedDevices[j + 1];
+      }
+
+      mountedDeviceCount--;
+      return ReturnOK;
+    }
+  }
+
+  return ReturnError;
+}
+
+
 #if defined(POSIX_ARCH_OTHER)
 
 
 /* For unit testing only! */
   void __FSStateClear__(void) {
-    /* Clear any static state if needed */
+    /* Clear mount tracking state */
+    mountedDeviceCount = 0;
     return;
   }
 

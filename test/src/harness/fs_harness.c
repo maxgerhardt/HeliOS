@@ -66,7 +66,7 @@ void fs_harness(void) {
 
 
   /* Allocate config structure from heap (required by xDeviceConfigDevice) */
-  unit_try(OK(xMemAlloc((volatile Addr_t *) &blockConfig, sizeof(BlockDeviceConfig_t))));
+  unit_try(OK(xMemAlloc((volatile Addr_t **) &blockConfig, sizeof(BlockDeviceConfig_t))));
 
 
   /* Configure block device to use RAM disk */
