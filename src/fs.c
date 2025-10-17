@@ -650,7 +650,6 @@ Return_t xFileWrite(File_t *file_, const Size_t size_, const Byte_t *data_) {
                 nextCluster = newCluster;
               } else {
                 /* No free clusters available */
-                __KernelFreeMemory__(clusterData);
                 __AssertOnElse__();
                 FUNCTION_EXIT;
               }
@@ -658,7 +657,6 @@ Return_t xFileWrite(File_t *file_, const Size_t size_, const Byte_t *data_) {
 
             file_->currentCluster = nextCluster;
           } else {
-            __KernelFreeMemory__(clusterData);
             __AssertOnElse__();
             FUNCTION_EXIT;
           }
