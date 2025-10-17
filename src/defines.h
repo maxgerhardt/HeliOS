@@ -145,6 +145,12 @@
   #define __ReturnOk__() ret = ReturnOK
 
 
+  #if defined(__ReturnError__)
+    #undef __ReturnError__
+  #endif /* if defined(__ReturnError__) */
+  #define __ReturnError__() ret = ReturnError
+
+
   #if defined(__AssertOnElse__)
     #undef __AssertOnElse__
   #endif /* if defined(__AssertOnElse__()) */

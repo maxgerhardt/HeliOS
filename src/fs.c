@@ -229,8 +229,8 @@ Return_t xFSGetVolumeInfo(const Volume_t *volume_, VolumeInfo_t **info_) {
 
 
   if(__PointerIsNotNull__(volume_) && __PointerIsNotNull__(info_)) {
-    /* Allocate info structure in kernel heap */
-    if(OK(__KernelAllocateMemory__((volatile Addr_t **) &info, sizeof(VolumeInfo_t)))) {
+    /* Allocate info structure in user heap (returned to caller) */
+    if(OK(xMemAlloc((volatile Addr_t **) &info, sizeof(VolumeInfo_t)))) {
       info->bytesPerSector = volume_->bytesPerSector;
       info->sectorsPerCluster = volume_->sectorsPerCluster;
       info->bytesPerCluster = (Word_t) volume_->bytesPerSector * volume_->sectorsPerCluster;
@@ -417,7 +417,8 @@ Return_t xFileOpen(File_t **file_, Volume_t *volume_, const Byte_t *path_, const
       __AssertOnElse__();
     }
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -438,7 +439,8 @@ Return_t xFileClose(File_t *file_) {
       __AssertOnElse__();
     }
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -869,7 +871,7 @@ Return_t xDirOpen(Dir_t **dir_, Volume_t *volume_, const Byte_t *path_) {
   Dir_t *dir = null;
 
 
-  if(__PointerIsNotNull__(dir_) && __PointerIsNotNull__(volume_)) {
+  if(__PointerIsNotNull__(dir_) && __PointerIsNotNull__(volume_) && __PointerIsNotNull__(path_)) {
     /* Allocate directory handle in kernel heap */
     if(OK(__KernelAllocateMemory__((volatile Addr_t **) &dir, sizeof(Dir_t)))) {
       dir->volume = volume_;
@@ -882,7 +884,8 @@ Return_t xDirOpen(Dir_t **dir_, Volume_t *volume_, const Byte_t *path_) {
       __AssertOnElse__();
     }
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -903,7 +906,8 @@ Return_t xDirClose(Dir_t *dir_) {
       __AssertOnElse__();
     }
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -985,8 +989,8 @@ Return_t xDirRead(Dir_t *dir_, DirEntry_t **entry_) {
       }
 
 
-      /* Allocate and fill directory entry */
-      if(OK(__KernelAllocateMemory__((volatile Addr_t **) &dirEntry, sizeof(DirEntry_t)))) {
+      /* Allocate and fill directory entry from user heap (returned to caller) */
+      if(OK(xMemAlloc((volatile Addr_t **) &dirEntry, sizeof(DirEntry_t)))) {
         /* Convert 8.3 filename to null-terminated string */
         Word_t i = 0;
         Word_t j = 0;
@@ -1062,7 +1066,8 @@ Return_t xDirMake(Volume_t *volume_, const Byte_t *path_) {
     /* TODO: Implement directory creation */
     __AssertOnElse__();
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -1081,7 +1086,8 @@ Return_t xDirRemove(Volume_t *volume_, const Byte_t *path_) {
     /* TODO: Implement directory removal */
     __AssertOnElse__();
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -1101,7 +1107,8 @@ Return_t xFileExists(Volume_t *volume_, const Byte_t *path_, Base_t *exists_) {
     *exists_ = false;
     __AssertOnElse__();
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -1120,7 +1127,8 @@ Return_t xFileUnlink(Volume_t *volume_, const Byte_t *path_) {
     /* TODO: Implement file deletion */
     __AssertOnElse__();
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -1139,7 +1147,8 @@ Return_t xFileRename(Volume_t *volume_, const Byte_t *oldPath_, const Byte_t *ne
     /* TODO: Implement file rename */
     __AssertOnElse__();
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;
@@ -1157,7 +1166,8 @@ Return_t xFileGetInfo(Volume_t *volume_, const Byte_t *path_, DirEntry_t **entry
     /* TODO: Implement file info lookup */
     __AssertOnElse__();
   } else {
-    __AssertOnElse__();
+    /* NULL pointer passed - return error instead of asserting */
+    __ReturnError__();
   }
 
   FUNCTION_EXIT;

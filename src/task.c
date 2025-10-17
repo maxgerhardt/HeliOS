@@ -308,7 +308,14 @@ Return_t xTaskGetNumberOfTasks(Base_t *tasks_) {
   Task_t *cursor = null;
 
 
-  if(__PointerIsNotNull__(tasks_) && __PointerIsNotNull__(tlist)) {
+  if(__PointerIsNotNull__(tasks_)) {
+    /* If tlist is null, no tasks have been created yet - return 0 */
+    if(__PointerIsNull__(tlist)) {
+      *tasks_ = 0;
+      __ReturnOk__();
+      FUNCTION_EXIT;
+    }
+
     cursor = tlist->head;
 
     while(__PointerIsNotNull__(cursor)) {

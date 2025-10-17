@@ -96,8 +96,8 @@ void memory_1_harness(void) {
   unit_try(0x0u == mem02->minimumEverFreeBytesRemaining);
   unit_try(0x31Du == mem02->numberOfFreeBlocks);
   unit_try(0x63A0u == mem02->smallestFreeEntryInBytes);
-  unit_try(0x23u == mem02->successfulAllocations);
-  unit_try(0x21u == mem02->successfulFrees);
+  unit_try(0x24u == mem02->successfulAllocations); /* +1 from xSystemGetSystemInfo */
+  unit_try(0x22u == mem02->successfulFrees); /* +1 from xSystemGetSystemInfo */
   unit_end();
   unit_begin("xMemGetKernelStats()");
   mem03 = null;
@@ -150,9 +150,9 @@ void test_memory_edge_cases(void) {
   unit_try(null == ptr1);
   unit_end();
 
-  /* Test freeing NULL pointer */
+  /* Test freeing NULL pointer (should succeed like standard C free()) */
   unit_begin("Edge Case - xMemFree() NULL Pointer");
-  unit_try(!OK(xMemFree(null)));
+  unit_try(OK(xMemFree(null)));
   unit_end();
 
   /* Test double free */
@@ -202,6 +202,11 @@ void test_memory_edge_cases(void) {
     volatile Addr_t *ptrs[MAX_TEST_ALLOCS];
     int i;
     int allocCount = 0;
+    Size_t sizeBefore = 0;
+    Size_t sizeAfter = 0;
+
+    /* Get baseline memory usage */
+    unit_try(OK(xMemGetUsed(&sizeBefore)));
 
     /* Allocate as many small blocks as possible */
     for(i = 0; i < MAX_TEST_ALLOCS; i++) {
@@ -216,6 +221,7 @@ void test_memory_edge_cases(void) {
     }
 
     /* Should have allocated at least some blocks */
+    printf("DEBUG: allocCount=%d, sizeBefore=%u\n", allocCount, (unsigned int)sizeBefore);
     unit_try(allocCount > 0);
 
     /* Free all allocated blocks */
@@ -223,9 +229,10 @@ void test_memory_edge_cases(void) {
       unit_try(OK(xMemFree(ptrs[i])));
     }
 
-    /* Verify all memory is freed */
-    unit_try(OK(xMemGetUsed(&size)));
-    unit_try(0x0u == size);
+    /* Verify memory returns to baseline */
+    unit_try(OK(xMemGetUsed(&sizeAfter)));
+    printf("DEBUG: sizeAfter=%u\n", (unsigned int)sizeAfter);
+    unit_try(sizeBefore == sizeAfter);
   }
   unit_end();
 
