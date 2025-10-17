@@ -1484,6 +1484,7 @@ static Return_t __FindFreeCluster__(const Volume_t *vol_, Word_t startHint_, Wor
           /* Found a free cluster */
           *freeCluster_ = cluster;
           __ReturnOk__();
+          FUNCTION_EXIT;
         }
       } else {
         /* Error reading FAT entry */
@@ -1500,6 +1501,7 @@ static Return_t __FindFreeCluster__(const Volume_t *vol_, Word_t startHint_, Wor
             /* Found a free cluster */
             *freeCluster_ = cluster;
             __ReturnOk__();
+            FUNCTION_EXIT;
           }
         } else {
           /* Error reading FAT entry */
